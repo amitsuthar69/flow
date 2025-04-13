@@ -1,0 +1,8 @@
+root = "."
+
+[build]
+  bin = "tmp/main"
+  cmd = "go build -o tmp/main main.go && ./tmp/main"
+  include_ext = ["go", "html", "templ"]
+  exclude_dir = ["flow", "lrucache"]
+  
