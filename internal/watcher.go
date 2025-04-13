@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -44,7 +45,7 @@ func Watch() {
 				}
 				if event.Has(fsnotify.Write) {
 					ext := strings.TrimPrefix(filepath.Ext(event.Name), ".")
-					if !contains(cfg.Build.IncludeExt, ext) {
+					if !slices.Contains(cfg.Build.IncludeExt, ext) {
 						continue
 					}
 
@@ -117,13 +118,4 @@ func Build(buildCmd string, file string) {
 			log.Printf("build error: %v", err)
 		}
 	}()
-}
-
-func contains(exts []string, fileExt string) bool {
-	for _, ext := range exts {
-		if ext == fileExt {
-			return true
-		}
-	}
-	return false
 }

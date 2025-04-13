@@ -14,8 +14,8 @@ root = "."
   # the command which will be executed to generate binary
   cmd = "go build -o tmp/main main.go && ./tmp/main"
 
-  # extensions to include (optional)
-  include_ext = []
+  # extensions to include
+  include_ext = ["go"]
 
   # directories to exclude (optional)
   exclude_dir = []
