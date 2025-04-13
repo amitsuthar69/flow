@@ -1,0 +1,8 @@
+1. Better Logging and Error Handling.
+   - proper messages
+   - colors?
+
+2. Other Features:
+   - Exclude Regex
+   - Custom Debounce
+   - clear screen on exit?
