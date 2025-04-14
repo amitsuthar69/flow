@@ -1,8 +1,8 @@
 package internal
 
 import (
+	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,22 +18,21 @@ func Watch() {
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Println(err)
+		Log("error", err.Error())
 	}
 	defer watcher.Close()
 
 	if err := Walk(watcher, cfg.Root, cfg.Build.ExcludeDir); err != nil {
-		log.Fatal(err)
+		Log("fatal", err.Error())
 	}
 
 	err = os.MkdirAll("tmp", 0755)
 	if err != nil {
-		log.Fatal(err)
+		Log("fatal", err.Error())
 	}
 
 	var (
-		timer     *time.Timer
-		lastEvent string
+		timer *time.Timer
 	)
 
 	go func() {
@@ -53,16 +52,22 @@ func Watch() {
 						timer.Stop()
 					}
 
-					lastEvent = event.Name
-					timer = time.AfterFunc(500*time.Millisecond, func() {
-						Build(cfg.Build.Cmd, lastEvent)
+					var debounce int
+					if cfg.Debounce > 0 {
+						debounce = cfg.Debounce
+					} else {
+						debounce = 500
+					}
+
+					timer = time.AfterFunc(time.Duration(debounce)*time.Millisecond, func() {
+						Build(cfg.Build.Cmd, event.Name)
 					})
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
 				}
-				log.Println("error:", err)
+				Log("error", err.Error())
 			}
 		}
 	}()
@@ -100,8 +105,6 @@ func Walk(watcher *fsnotify.Watcher, root string, excludeDirs []string) error {
 		// add path to watcher
 		if err := watcher.Add(path); err != nil {
 			return err
-		} else {
-			log.Printf("watching: '%s'\n", path)
 		}
 
 		return nil
@@ -109,13 +112,13 @@ func Walk(watcher *fsnotify.Watcher, root string, excludeDirs []string) error {
 }
 
 func Build(buildCmd string, file string) {
-	log.Printf("file %s has been modified, rebuilding...", file)
+	Log("info", fmt.Sprintf("file %s has been modified, rebuilding...", file))
 	go func() {
 		cmd := exec.Command("sh", "-c", buildCmd)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
-			log.Printf("build error: %v", err)
+			Log("fatal", err.Error())
 		}
 	}()
 }
