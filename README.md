@@ -1,5 +1,9 @@
 ## Flow live Reload
 
+![preview](https://github.com/user-attachments/assets/a4d204ca-83e0-4c7b-8da7-d8d9cbb87ea7)
+
+---
+
 Paste the below `.flow.toml` file and the binary in the root of your project.
 
 ```toml
