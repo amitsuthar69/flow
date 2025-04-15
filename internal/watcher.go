@@ -1,10 +1,8 @@
 package internal
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -22,7 +20,7 @@ func Watch() {
 	}
 	defer watcher.Close()
 
-	if err := Walk(watcher, cfg.Root, cfg.Build.ExcludeDir); err != nil {
+	if err := Walk(watcher, cfg.Root, cfg.Build.ExcludeDir, cfg.Build.ExcludeRegex); err != nil {
 		Log("fatal", err.Error())
 	}
 
@@ -43,6 +41,20 @@ func Watch() {
 					return
 				}
 				if event.Has(fsnotify.Write) {
+
+					// regex pattern check
+					fileName := filepath.Base(event.Name)
+					excluded := false
+					for _, pattern := range cfg.Build.ExcludeRegex {
+						if ok, _ := filepath.Match(pattern, fileName); ok {
+							excluded = true
+							break
+						}
+					}
+					if excluded {
+						continue
+					}
+
 					ext := strings.TrimPrefix(filepath.Ext(event.Name), ".")
 					if !slices.Contains(cfg.Build.IncludeExt, ext) {
 						continue
@@ -76,49 +88,25 @@ func Watch() {
 	select {}
 }
 
-func Walk(watcher *fsnotify.Watcher, root string, excludeDirs []string) error {
+func Walk(watcher *fsnotify.Watcher, root string, excludeDirs []string, excludeRegex []string) error {
 	return filepath.Walk(root, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		// if not a directory, we skip
-		if !info.IsDir() {
+		if info.IsDir() {
+			// exclude directories from excludeDirs
+			for _, exclude := range excludeDirs {
+				if path == ".git" || path == "tmp" || strings.Contains(path, exclude) {
+					return filepath.SkipDir
+				}
+			}
+			if err := watcher.Add(path); err != nil {
+				return err
+			}
 			return nil
-		}
-
-		// exclude directories from excludeDirs
-		for _, exclude := range excludeDirs {
-			if path == ".git" {
-				return filepath.SkipDir
-			}
-
-			if path == "tmp" {
-				return filepath.SkipDir
-			}
-
-			if strings.Contains(path, exclude) {
-				return filepath.SkipDir
-			}
-		}
-
-		// add path to watcher
-		if err := watcher.Add(path); err != nil {
-			return err
 		}
 
 		return nil
 	})
-}
-
-func Build(buildCmd string, file string) {
-	Log("info", fmt.Sprintf("file %s has been modified, rebuilding...", file))
-	go func() {
-		cmd := exec.Command("sh", "-c", buildCmd)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			Log("fatal", err.Error())
-		}
-	}()
 }

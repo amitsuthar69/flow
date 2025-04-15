@@ -22,12 +22,11 @@ debounce = 300
   cmd = "go build -o tmp/main main.go && ./tmp/main"
 
   # extensions to include
-  include_ext = ["go"]
+  include_ext = ["go", "html"]
+
+  # patterns to exclude in filenames, this may include test or auto-generated files
+  exclude_regex = ["*_test.go", ".*_templ.go"]
 
   # directories to exclude (optional)
   exclude_dir = []
 ```
-
-> TODO Features:
-> - Exclude Regex
-> - clear screen on exit?

@@ -12,10 +12,11 @@ type Config struct {
 	Debounce int `toml:"debounce"`
 
 	Build struct {
-		Bin        string   `toml:"bin"`
-		Cmd        string   `toml:"cmd"`
-		IncludeExt []string `toml:"include_ext"`
-		ExcludeDir []string `toml:"exclude_dir"`
+		Bin          string   `toml:"bin"`
+		Cmd          string   `toml:"cmd"`
+		IncludeExt   []string `toml:"include_ext"`
+		ExcludeDir   []string `toml:"exclude_dir"`
+		ExcludeRegex []string `toml:"exclude_regex"`
 	} `toml:"build"`
 }
 
