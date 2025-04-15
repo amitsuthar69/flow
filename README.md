@@ -24,9 +24,9 @@ debounce = 300
   # extensions to include
   include_ext = ["go", "html"]
 
-  # patterns to exclude in filenames, this may include test or auto-generated files
-  exclude_regex = ["*_test.go", ".*_templ.go"]
+  # patterns to exclude in filenames, this may include test or auto-generated files (optional)
+  exclude_regex = ["*_test.go", "*_templ.go"]
 
   # directories to exclude (optional)
-  exclude_dir = []
+  exclude_dir = ["bin", "assets"]
 ```
